@@ -858,26 +858,10 @@ let products = [
   { id:12, name:"Marlboro Red",      category:"Tobacco",    stock:2,  price:5   },
 ];
 
-let sales = [
-  { id:1,  productId:1,  quantity:2,  total:130, date:"2026-06-07" },
-  { id:2,  productId:4,  quantity:5,  total:60,  date:"2026-06-07" },
-  { id:3,  productId:2,  quantity:3,  total:135, date:"2026-06-07" },
-  { id:4,  productId:7,  quantity:10, total:80,  date:"2026-06-06" },
-  { id:5,  productId:6,  quantity:4,  total:72,  date:"2026-06-06" },
-  { id:6,  productId:1,  quantity:3,  total:195, date:"2026-06-05" },
-  { id:7,  productId:10, quantity:2,  total:170, date:"2026-06-05" },
-  { id:8,  productId:3,  quantity:6,  total:150, date:"2026-06-04" },
-  { id:9,  productId:5,  quantity:8,  total:80,  date:"2026-06-04" },
-  { id:10, productId:11, quantity:1,  total:110, date:"2026-06-03" },
-  { id:11, productId:4,  quantity:12, total:144, date:"2026-06-03" },
-  { id:12, productId:2,  quantity:2,  total:90,  date:"2026-06-02" },
-  { id:13, productId:9,  quantity:3,  total:60,  date:"2026-06-02" },
-  { id:14, productId:1,  quantity:5,  total:325, date:"2026-06-01" },
-  { id:15, productId:7,  quantity:15, total:120, date:"2026-06-01" },
-];
+let sales = [];
 
 let nextProductId = 13;
-let nextSaleId    = 16;
+let nextSaleId    = 1;
 let currentPage   = 'sales';
 let order         = [];
 let deleteTargetId = null;
