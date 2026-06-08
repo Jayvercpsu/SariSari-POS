@@ -322,12 +322,18 @@ input:focus, select:focus, textarea:focus {
 .modal-overlay {
   display: none; position: fixed; inset: 0;
   background: rgba(15,23,42,0.5); z-index: 200;
-  align-items: center; justify-content: center; padding: 20px;
+  align-items: center; justify-content: center;
+  padding: clamp(12px, 3vh, 24px);
+  overflow: hidden;
 }
 .modal-overlay.open { display: flex; }
 .modal {
   background: var(--surface); border-radius: 14px;
   box-shadow: var(--shadow-lg); width: 100%; max-width: 460px;
+  max-height: calc(100dvh - 32px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   animation: modalIn 0.18s ease;
 }
 @keyframes modalIn {
@@ -336,17 +342,29 @@ input:focus, select:focus, textarea:focus {
 }
 .modal-header {
   display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+  gap: 12px;
   padding: 18px 22px 14px; border-bottom: 1px solid var(--border);
 }
-.modal-title { font-size: 0.95rem; font-weight: 700; }
+.modal-title { font-size: 0.95rem; font-weight: 700; min-width: 0; }
 .modal-close {
-  background: none; border: none; font-size: 0.9rem; cursor: pointer;
-  color: var(--text3); padding: 5px; border-radius: 5px; transition: color var(--transition);
+  width: 32px; height: 32px;
+  background: var(--surface2); border: 1px solid var(--border);
+  font-size: 0.9rem; cursor: pointer;
+  color: var(--text3); border-radius: 8px; transition: color var(--transition);
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
 }
 .modal-close:hover { color: var(--text); background: var(--surface2); }
-.modal-body { padding: 18px 22px; }
+.modal-body {
+  padding: 18px 22px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  min-height: 0;
+}
 .modal-footer {
-  display: flex; gap: 10px; justify-content: flex-end;
+  display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;
+  flex-shrink: 0;
   padding: 12px 22px; border-top: 1px solid var(--border);
   background: var(--surface2); border-radius: 0 0 14px 14px;
 }
@@ -813,6 +831,17 @@ input:focus, select:focus, textarea:focus {
   .content-area { padding: 14px; }
   .topbar { padding: 0 14px; }
   .topbar-date { display: none; }
+  .modal-overlay {
+    align-items: center;
+    padding: 10px;
+  }
+  .modal {
+    max-height: calc(100dvh - 20px);
+  }
+  .modal-header { padding: 14px 16px 12px; }
+  .modal-body { padding: 14px 16px; }
+  .modal-footer { padding: 12px 16px; }
+  .modal-footer .btn { flex: 1; justify-content: center; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
   .pos-products { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
 }

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tindatrack-offline-v3';
+const CACHE_NAME = 'tindatrack-offline-v4';
 const APP_SHELL = [
   './',
   './index.html',
