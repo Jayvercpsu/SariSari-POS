@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TindaTrack — Sari-Sari POS</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
 /* ============================================================
    VARIABLES & RESET
@@ -38,7 +36,7 @@
   --shadow:     0 1px 8px rgba(15,23,42,0.08);
   --shadow-md:  0 4px 16px rgba(15,23,42,0.10);
   --shadow-lg:  0 8px 32px rgba(15,23,42,0.14);
-  --font:       'Inter', sans-serif;
+  --font:       Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --transition: 0.15s ease;
 }
 
@@ -55,6 +53,57 @@ body {
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+/* Offline icon fallback. These replace the old CDN icon font. */
+.fa-solid {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font);
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1;
+  min-width: 1em;
+}
+.fa-solid::before { display: inline-block; }
+.fa-store::before { content: "▣"; }
+.fa-house::before { content: "⌂"; }
+.fa-cash-register::before { content: "₱"; }
+.fa-gauge-high::before { content: "◷"; }
+.fa-boxes-stacked::before { content: "▦"; }
+.fa-chart-bar::before { content: "▥"; }
+.fa-trophy::before { content: "★"; }
+.fa-circle::before { content: "●"; }
+.fa-bars::before { content: "☰"; }
+.fa-magnifying-glass::before { content: "⌕"; }
+.fa-receipt::before { content: "▤"; }
+.fa-trash-can::before,
+.fa-trash::before { content: "⌧"; }
+.fa-cart-shopping::before { content: "🛒"; }
+.fa-check-circle::before,
+.fa-circle-check::before { content: "✓"; }
+.fa-clock-rotate-left::before { content: "◴"; }
+.fa-triangle-exclamation::before,
+.fa-circle-exclamation::before { content: "!"; }
+.fa-plus::before { content: "+"; }
+.fa-xmark::before { content: "×"; }
+.fa-floppy-disk::before { content: "▣"; }
+.fa-peso-sign::before { content: "₱"; }
+.fa-calendar-week::before,
+.fa-calendar::before { content: "▦"; }
+.fa-pen::before { content: "✎"; }
+.fa-th-large::before { content: "▦"; }
+.fa-wine-bottle::before { content: "🥤"; }
+.fa-cookie-bite::before { content: "◌"; }
+.fa-bowl-food::before { content: "◡"; }
+.fa-pepper-hot::before { content: "♦"; }
+.fa-soap::before { content: "▱"; }
+.fa-cheese::before { content: "△"; }
+.fa-smoking::before { content: "▮"; }
+.fa-tag::before { content: "#"; }
+.fa-circle-info::before { content: "i"; }
+.fa-minus::before { content: "−"; }
+.fa-user::before { content: "◉"; }
 
 /* ============================================================
    SIDEBAR
@@ -147,6 +196,7 @@ body {
   position: sticky; top: 0; z-index: 50;
 }
 .topbar-left { display: flex; align-items: center; gap: 12px; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
 #menu-toggle {
   display: none; background: none; border: none;
   font-size: 1.1rem; cursor: pointer; color: var(--text2); padding: 6px;
@@ -389,6 +439,9 @@ input:focus, select:focus, textarea:focus {
   flex-direction: column;
   overflow: hidden;
 }
+.cart-backdrop,
+.mobile-cart-fab,
+.cart-close-mobile { display: none; }
 .order-head {
   padding: 16px 18px 14px;
   border-bottom: 1px solid var(--border);
@@ -491,6 +544,41 @@ input:focus, select:focus, textarea:focus {
 .dash-card-head i { color: var(--accent); }
 
 /* ============================================================
+   ACCOUNT
+============================================================ */
+.account-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+  gap: 20px;
+}
+.account-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+.account-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92rem;
+  font-weight: 800;
+  margin-bottom: 16px;
+}
+.account-panel-head i { color: var(--accent); }
+.account-summary {
+  color: var(--text2);
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+.account-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+/* ============================================================
    REPORTS
 ============================================================ */
 .report-tabs {
@@ -569,23 +657,133 @@ input:focus, select:focus, textarea:focus {
 /* ============================================================
    RESPONSIVE
 ============================================================ */
-@media (max-width: 960px) {
+@media (max-width: 1024px) {
   :root { --sidebar-w: 0px; }
-  #sidebar { transform: translateX(-220px); width: 220px; }
-  #sidebar.open { transform: translateX(0); }
+  body { display: block; padding-bottom: 76px; }
+  #sidebar {
+    transform: none;
+    width: 100%;
+    min-height: 0;
+    height: 72px;
+    top: auto;
+    bottom: 0;
+    right: 0;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 -8px 24px rgba(15,23,42,0.16);
+  }
+  #sidebar.open { transform: none; }
+  .sidebar-brand, .sidebar-footer, .nav-label { display: none; }
+  .sidebar-nav {
+    flex: none;
+    height: 100%;
+    padding: 0;
+    overflow: visible;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .nav-item {
+    min-width: 0;
+    justify-content: center;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 4px 7px;
+    border-left: 0;
+    border-top: 3px solid transparent;
+    font-size: clamp(0.58rem, 1.8vw, 0.72rem);
+    text-align: center;
+    line-height: 1.15;
+  }
+  .nav-item.active { border-left-color: transparent; border-top-color: var(--accent2); }
+  .nav-item .nav-icon { width: auto; min-height: 18px; font-size: 1rem; }
   #main { margin-left: 0; }
-  #menu-toggle { display: block; }
-  .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 99; }
-  .sidebar-overlay.open { display: block; }
+  #menu-toggle, .sidebar-overlay, .sidebar-overlay.open { display: none; }
   .pos-layout { grid-template-columns: 1fr; height: auto; }
-  .order-panel { height: auto; }
+  .cart-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15,23,42,0.46);
+    z-index: 160;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
+  }
+  .cart-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .order-panel {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    z-index: 170;
+    height: min(76vh, 620px);
+    max-height: calc(100vh - 24px);
+    transform: translateY(calc(100% + 20px));
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+  .order-panel.open {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .cart-close-mobile {
+    display: inline-flex;
+    width: 30px;
+    height: 30px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface2);
+    color: var(--text2);
+    cursor: pointer;
+  }
+  .mobile-cart-fab {
+    position: fixed;
+    right: 14px;
+    bottom: 88px;
+    z-index: 120;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    box-shadow: var(--shadow-lg);
+    font-family: var(--font);
+    font-size: 0.85rem;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .mobile-cart-fab span {
+    display: inline-flex;
+    min-width: 22px;
+    height: 22px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.18);
+  }
   .pos-products { max-height: 360px; }
   .report-summary { grid-template-columns: 1fr; }
   .form-row { grid-template-columns: 1fr; }
   .dash-grid { grid-template-columns: 1fr; }
+  .account-grid { grid-template-columns: 1fr; }
+  #toast-container { bottom: 88px; right: 14px; left: 14px; }
+  .toast { justify-content: center; }
 }
 @media (max-width: 600px) {
   .content-area { padding: 14px; }
+  .topbar { padding: 0 14px; }
+  .topbar-date { display: none; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
   .pos-products { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
 }
@@ -605,27 +803,22 @@ input:focus, select:focus, textarea:focus {
     </div>
   </div>
   <nav class="sidebar-nav">
-    <div class="nav-label">Main</div>
-    <div class="nav-item active" onclick="navigate('sales')">
-      <i class="fa-solid fa-cash-register nav-icon"></i> Point of Sale
+    <div class="nav-item active" data-page="sales" onclick="navigate('sales')">
+      <i class="fa-solid fa-house nav-icon"></i> Home
     </div>
-    <div class="nav-item" onclick="navigate('dashboard')">
-      <i class="fa-solid fa-gauge-high nav-icon"></i> Dashboard
+    <div class="nav-item" data-page="inventory" onclick="navigate('inventory')">
+      <i class="fa-solid fa-boxes-stacked nav-icon"></i> Products
     </div>
-    <div class="nav-label">Manage</div>
-    <div class="nav-item" onclick="navigate('inventory')">
-      <i class="fa-solid fa-boxes-stacked nav-icon"></i> Inventory
-    </div>
-    <div class="nav-item" onclick="navigate('reports')">
+    <div class="nav-item" data-page="reports" onclick="navigate('reports')">
       <i class="fa-solid fa-chart-bar nav-icon"></i> Reports
     </div>
-    <div class="nav-item" onclick="navigate('bestsellers')">
-      <i class="fa-solid fa-trophy nav-icon"></i> Best Sellers
+    <div class="nav-item" data-page="account" onclick="navigate('account')">
+      <i class="fa-solid fa-user nav-icon"></i> Account
     </div>
   </nav>
   <div class="sidebar-footer">
     <i class="fa-solid fa-circle" style="color:#22c55e;font-size:0.5rem;vertical-align:middle;"></i>
-    v1.0 · Ready for JSONBin.io
+    v1.1 · Offline storage ready
   </div>
 </aside>
 
@@ -634,7 +827,7 @@ input:focus, select:focus, textarea:focus {
   <header class="topbar">
     <div class="topbar-left">
       <button id="menu-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
-      <div class="page-title" id="page-title-text">Point of Sale</div>
+      <div class="page-title" id="page-title-text">Home</div>
     </div>
     <div class="topbar-right">
       <div class="topbar-date" id="topbar-date"></div>
@@ -660,9 +853,19 @@ input:focus, select:focus, textarea:focus {
         </div>
 
         <!-- RIGHT: Order Panel -->
-        <div class="order-panel">
+        <div class="cart-backdrop" id="cart-backdrop" onclick="closeCartModal()"></div>
+        <button class="mobile-cart-fab" onclick="openCartModal()">
+          <i class="fa-solid fa-cart-shopping"></i>
+          Cart
+          <span id="mobile-cart-count">0</span>
+        </button>
+
+        <div class="order-panel" id="order-panel">
           <div class="order-head">
             <div class="order-head-title">
+              <button class="cart-close-mobile" onclick="closeCartModal()" aria-label="Close cart">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
               <i class="fa-solid fa-receipt" style="color:var(--accent)"></i>
               Current Order
               <span class="order-count-badge" id="order-badge">0</span>
@@ -778,6 +981,33 @@ input:focus, select:focus, textarea:focus {
       <div class="rank-list" id="rank-list"></div>
     </div>
 
+    <!-- ===================== ACCOUNT ===================== -->
+    <div class="page" id="page-account">
+      <div class="account-grid">
+        <div class="account-panel">
+          <div class="account-panel-head">
+            <i class="fa-solid fa-user"></i>
+            Account
+          </div>
+          <div class="account-summary" id="account-local-summary"></div>
+        </div>
+        <div class="account-panel">
+          <div class="account-panel-head">
+            <i class="fa-solid fa-circle-check"></i>
+            Automatic Backup
+          </div>
+          <div class="form-group">
+            <label>Backup URL</label>
+            <input type="url" id="backup-url" placeholder="https://your-backup-endpoint.com/pos">
+          </div>
+          <div id="backup-meta" class="text-muted" style="font-size:0.78rem;line-height:1.5;"></div>
+          <div class="account-actions">
+            <button class="btn btn-primary" onclick="saveBackupSettings()"><i class="fa-solid fa-floppy-disk"></i> Save Backup URL</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -841,9 +1071,13 @@ input:focus, select:focus, textarea:focus {
 
 <script>
 /* ============================================================
-   MOCK DATA  (replace with JSONBin.io calls later)
+   DEFAULT DATA & LOCAL STORAGE
 ============================================================ */
-let products = [
+const STORAGE_KEY = 'tindatrack-pos-data-v1';
+const BACKUP_URL_KEY = 'tindatrack-pos-backup-url-v1';
+const BACKUP_META_KEY = 'tindatrack-pos-backup-meta-v1';
+
+const DEFAULT_PRODUCTS = [
   { id:1,  name:"Coke 1.5L",        category:"Drinks",     stock:20, price:65  },
   { id:2,  name:"Royal TRU-Orange",  category:"Drinks",     stock:15, price:45  },
   { id:3,  name:"C2 Apple",          category:"Drinks",     stock:8,  price:25  },
@@ -858,6 +1092,7 @@ let products = [
   { id:12, name:"Marlboro Red",      category:"Tobacco",    stock:2,  price:5   },
 ];
 
+let products = DEFAULT_PRODUCTS.map(p => ({...p}));
 let sales = [];
 
 let nextProductId = 13;
@@ -866,6 +1101,8 @@ let currentPage   = 'sales';
 let order         = [];
 let deleteTargetId = null;
 let activeCatFilter = 'All';
+let backupTimer = null;
+let backupPending = false;
 
 /* ============================================================
    HELPERS
@@ -890,6 +1127,140 @@ function bestSellers() {
   sales.forEach(s=>{ t[s.productId]=(t[s.productId]||0)+s.quantity; });
   return Object.entries(t).map(([id,qty])=>({id:+id,qty})).sort((a,b)=>b.qty-a.qty);
 }
+function nextIdFor(rows) { return rows.reduce((max,row)=>Math.max(max, Number(row.id)||0),0)+1; }
+function formatSavedAt(value) {
+  if(!value) return 'never';
+  return new Date(value).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+}
+function getBackupUrl() { return (localStorage.getItem(BACKUP_URL_KEY)||'').trim(); }
+function getBackupMeta() {
+  try { return JSON.parse(localStorage.getItem(BACKUP_META_KEY)||'{}'); }
+  catch { return {}; }
+}
+function buildSnapshot() {
+  return {
+    products,
+    sales,
+    order,
+    nextProductId,
+    nextSaleId,
+    savedAt: new Date().toISOString()
+  };
+}
+function loadLocalData() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(!raw) { saveLocalData({backup:false}); return; }
+  try {
+    const state = JSON.parse(raw);
+    if(Array.isArray(state.products)) products = state.products;
+    if(Array.isArray(state.sales)) sales = state.sales;
+    if(Array.isArray(state.order)) order = state.order;
+    nextProductId = Number(state.nextProductId) || nextIdFor(products);
+    nextSaleId = Number(state.nextSaleId) || nextIdFor(sales);
+  } catch {
+    showToast('Saved data could not be loaded. Sample data is active.','error');
+    saveLocalData({backup:false});
+  }
+}
+function saveLocalData({backup=true}={}) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(buildSnapshot()));
+    if(currentPage==='account') renderAccount();
+    if(backup) queueOnlineBackup();
+  } catch {
+    showToast('Browser storage is full. Data was not saved.','error');
+  }
+}
+function queueOnlineBackup() {
+  if(!getBackupUrl()) { backupPending = false; return; }
+  backupPending = true;
+  if(!navigator.onLine) return;
+  clearTimeout(backupTimer);
+  backupTimer = setTimeout(sendOnlineBackup, 600);
+}
+async function sendOnlineBackup() {
+  const url = getBackupUrl();
+  if(!url || !navigator.onLine) return;
+  try {
+    const snapshot = buildSnapshot();
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(snapshot)
+    });
+    if(!response.ok) throw new Error('Backup request failed');
+    const backedUpAt = new Date().toISOString();
+    backupPending = false;
+    localStorage.setItem(BACKUP_META_KEY, JSON.stringify({backedUpAt}));
+    updateBackupMeta();
+    updateAccountSummary();
+  } catch {
+    backupPending = true;
+  }
+}
+function setupConnectivity() {
+  window.addEventListener('online', () => {
+    showToast('Online. Local data is ready to back up.','success');
+    if(backupPending || getBackupUrl()) queueOnlineBackup();
+    updateBackupMeta();
+  });
+  window.addEventListener('offline', () => {
+    updateBackupMeta();
+    showToast('Offline mode. Sales will still save here.');
+  });
+  updateBackupMeta();
+}
+function renderAccount() {
+  document.getElementById('backup-url').value = getBackupUrl();
+  updateBackupMeta();
+  updateAccountSummary();
+}
+function updateAccountSummary() {
+  const el = document.getElementById('account-local-summary');
+  if(!el) return;
+  const units = products.reduce((sum,p)=>sum + Number(p.stock||0), 0);
+  const totalSales = salesTotal(sales);
+  el.innerHTML = `
+    <div><strong>${products.length}</strong> products · <strong>${units}</strong> units in stock</div>
+    <div><strong>${sales.length}</strong> sales recorded · <strong>${fmt(totalSales)}</strong> total revenue</div>
+  `;
+}
+function openBackupModal() {
+  navigate('account');
+}
+function updateBackupMeta() {
+  const el = document.getElementById('backup-meta');
+  if(!el) return;
+  const meta = getBackupMeta();
+  const status = navigator.onLine ? 'Online' : 'Offline';
+  const backupLine = getBackupUrl() ? 'Auto backup is enabled.' : 'No backup URL set.';
+  el.textContent = `${status}. ${backupLine} Last backup: ${formatSavedAt(meta.backedUpAt)}.`;
+}
+function saveBackupSettings() {
+  const input = document.getElementById('backup-url');
+  const url = input.value.trim();
+  if(url && !/^https?:\/\//i.test(url)) {
+    showToast('Backup URL must start with http:// or https://','error');
+    return;
+  }
+  if(url) localStorage.setItem(BACKUP_URL_KEY, url);
+  else localStorage.removeItem(BACKUP_URL_KEY);
+  if(url) queueOnlineBackup();
+  renderAccount();
+  showToast('Backup settings saved.','success');
+}
+function runBackupNow() {
+  const url = document.getElementById('backup-url').value.trim();
+  if(url && !/^https?:\/\//i.test(url)) {
+    showToast('Backup URL must start with http:// or https://','error');
+    return;
+  }
+  if(url) localStorage.setItem(BACKUP_URL_KEY, url);
+  if(!getBackupUrl()) { showToast('Add a backup URL first.','error'); return; }
+  if(!navigator.onLine) { showToast('You are offline. Backup will run when online.','error'); queueOnlineBackup(); return; }
+  queueOnlineBackup();
+  showToast('Backup started.','success');
+}
 
 /* Category icon map */
 const catIcons = {
@@ -906,21 +1277,14 @@ function getCatIcon(cat) { return catIcons[cat] || 'fa-tag'; }
 /* ============================================================
    NAVIGATION
 ============================================================ */
-const titles = { sales:'Point of Sale', dashboard:'Dashboard', inventory:'Inventory', reports:'Reports', bestsellers:'Best Sellers' };
+const titles = { sales:'Home', dashboard:'Dashboard', inventory:'Products', reports:'Reports', bestsellers:'Best Sellers', account:'Account' };
 
 function navigate(page) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
-  // match nav items
-  document.querySelectorAll('.nav-item').forEach(n=>{
-    const txt = n.textContent.trim().toLowerCase();
-    if (page==='sales' && txt.includes('point')) n.classList.add('active');
-    else if (page==='dashboard' && txt.includes('dashboard')) n.classList.add('active');
-    else if (page==='inventory' && txt.includes('inventory')) n.classList.add('active');
-    else if (page==='reports' && txt.includes('reports')) n.classList.add('active');
-    else if (page==='bestsellers' && txt.includes('best')) n.classList.add('active');
-  });
+  const navItem = document.querySelector(`.nav-item[data-page="${page}"]`);
+  if(navItem) navItem.classList.add('active');
   document.getElementById('page-title-text').textContent = titles[page];
   currentPage = page;
   if (page==='sales')       { renderCatFilters(); renderProductGrid(); }
@@ -928,6 +1292,7 @@ function navigate(page) {
   if (page==='inventory')   renderInventory();
   if (page==='reports')     renderReport('daily');
   if (page==='bestsellers') renderBestSellers();
+  if (page==='account')     renderAccount();
   closeSidebar();
 }
 
@@ -1045,6 +1410,7 @@ function saveProduct() {
   if(!name||!cat||isNaN(stock)||isNaN(price)||stock<0||price<0){ showToast('Please fill all fields correctly.','error'); return; }
   if(id){ const p=products.find(p=>p.id===+id); if(p){p.name=name;p.category=cat;p.stock=stock;p.price=price;} showToast('Product updated!','success'); }
   else  { products.push({id:nextProductId++,name,category:cat,stock,price}); showToast('Product added!','success'); }
+  saveLocalData();
   closeModal('modal-product');
   renderInventory();
   if(currentPage==='dashboard') renderDashboard();
@@ -1061,6 +1427,8 @@ function openDeleteModal(id) {
 }
 function confirmDelete() {
   products = products.filter(p=>p.id!==deleteTargetId);
+  order = order.filter(o=>products.some(p=>p.id===o.productId));
+  saveLocalData();
   closeModal('modal-delete');
   renderInventory();
   showToast('Product deleted.','success');
@@ -1114,13 +1482,30 @@ function renderProductGrid() {
 /* ============================================================
    ORDER CART
 ============================================================ */
+function orderItemCount() { return order.reduce((sum,item)=>sum + Number(item.qty||0), 0); }
+function isMobileCartMode() { return window.matchMedia('(max-width: 1024px)').matches; }
+function openCartModal() {
+  if(!isMobileCartMode()) return;
+  document.getElementById('order-panel').classList.add('open');
+  document.getElementById('cart-backdrop').classList.add('open');
+}
+function closeCartModal() {
+  document.getElementById('order-panel').classList.remove('open');
+  document.getElementById('cart-backdrop').classList.remove('open');
+}
+
 function addToOrder(productId) {
   const p = products.find(p=>p.id===productId);
   if(!p||p.stock===0) return;
   const ex = order.find(o=>o.productId===productId);
-  if(ex){ if(ex.qty>=p.stock){ showToast('Not enough stock!','error'); return; } ex.qty++; }
+  if(ex){
+    if(ex.qty>=p.stock){ showToast('Not enough stock!','error'); return; }
+    ex.qty++;
+  }
   else  { order.push({productId,qty:1}); }
+  saveLocalData({backup:false});
   renderOrderPanel();
+  showToast(`${p.name} added to cart.`, 'success');
 }
 
 function changeQty(productId, delta) {
@@ -1129,18 +1514,23 @@ function changeQty(productId, delta) {
   item.qty += delta;
   if(item.qty<=0) order = order.filter(o=>o.productId!==productId);
   else if(p && item.qty>p.stock){ item.qty=p.stock; showToast('Max stock reached','error'); }
+  saveLocalData({backup:false});
   renderOrderPanel();
 }
 
-function removeFromOrder(productId) { order=order.filter(o=>o.productId!==productId); renderOrderPanel(); }
-function clearOrder() { order=[]; renderOrderPanel(); }
+function removeFromOrder(productId) { order=order.filter(o=>o.productId!==productId); saveLocalData({backup:false}); renderOrderPanel(); }
+function clearOrder() { order=[]; saveLocalData({backup:false}); renderOrderPanel(); }
 
 function renderOrderPanel() {
   const wrap = document.getElementById('order-items');
+  const updateCartCounts = count => {
+    document.getElementById('order-badge').textContent = count;
+    document.getElementById('order-item-count').textContent = count+' pcs';
+    document.getElementById('mobile-cart-count').textContent = count;
+  };
   if(order.length===0){
     wrap.innerHTML = `<div class="order-empty-state"><i class="fa-solid fa-cart-shopping"></i><p>No items yet.<br>Tap a product to add.</p></div>`;
-    document.getElementById('order-badge').textContent = '0';
-    document.getElementById('order-item-count').textContent = '0 pcs';
+    updateCartCounts(0);
     document.getElementById('order-subtotal').textContent = '₱0.00';
     document.getElementById('order-total').textContent = '₱0.00';
     return;
@@ -1165,8 +1555,7 @@ function renderOrderPanel() {
       <button class="oi-del" onclick="removeFromOrder(${p.id})"><i class="fa-solid fa-xmark"></i></button>
     </div>`;
   }).join('');
-  document.getElementById('order-badge').textContent = count;
-  document.getElementById('order-item-count').textContent = count+' pcs';
+  updateCartCounts(count);
   document.getElementById('order-subtotal').textContent = fmt(total);
   document.getElementById('order-total').textContent = fmt(total);
 }
@@ -1183,8 +1572,10 @@ function completeSale() {
   });
   showToast('Sale completed — '+fmt(grandTotal),'success');
   order = [];
+  saveLocalData();
   renderOrderPanel();
   renderProductGrid();
+  closeCartModal();
 }
 
 /* ============================================================
@@ -1273,29 +1664,18 @@ function init() {
   const now = new Date();
   document.getElementById('topbar-date').textContent =
     now.toLocaleDateString('en-PH',{weekday:'short',year:'numeric',month:'short',day:'numeric'});
+  loadLocalData();
+  setupConnectivity();
   renderCatFilters();
   renderProductGrid();
+  renderOrderPanel();
+  registerOfflineCache();
 }
 
-/*
-  ── JSONBin.io INTEGRATION (add later) ────────────────────────
-  const BIN_ID = 'YOUR_BIN_ID', API_KEY = 'YOUR_API_KEY';
-  const BASE = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
-
-  async function loadData() {
-    const r = await fetch(BASE+'/latest', { headers:{'X-Master-Key':API_KEY} });
-    const j = await r.json();
-    products = j.record.products; sales = j.record.sales;
-  }
-  async function saveData() {
-    await fetch(BASE, { method:'PUT',
-      headers:{'Content-Type':'application/json','X-Master-Key':API_KEY},
-      body: JSON.stringify({products,sales})
-    });
-  }
-  // Call loadData() in init(), saveData() after mutations.
-  ──────────────────────────────────────────────────────────────
-*/
+function registerOfflineCache() {
+  if(!('serviceWorker' in navigator) || !/^https?:$/.test(location.protocol)) return;
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
 
 init();
 </script>
