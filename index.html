@@ -625,6 +625,35 @@ input:focus, select:focus, textarea:focus {
 .rank-stats { text-align: right; }
 .rank-qty { font-size: 1.1rem; font-weight: 800; color: var(--accent); }
 .rank-qlabel { font-size: 0.68rem; color: var(--text3); }
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.category-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface2);
+}
+.category-name {
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+.category-count {
+  color: var(--text3);
+  font-size: 0.72rem;
+  margin-top: 2px;
+}
+.category-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
 
 /* ============================================================
    TOAST
@@ -938,6 +967,9 @@ input:focus, select:focus, textarea:focus {
           <select id="inv-cat-filter" onchange="renderInventory()" style="width:auto;padding:9px 12px;">
             <option value="">All Categories</option>
           </select>
+          <button class="btn btn-secondary" onclick="openCategoryModal()">
+            <i class="fa-solid fa-tag"></i> Categories
+          </button>
           <button class="btn btn-primary" onclick="openAddProduct()">
             <i class="fa-solid fa-plus"></i> Add Product
           </button>
@@ -971,6 +1003,10 @@ input:focus, select:focus, textarea:focus {
           <tbody id="report-table"></tbody>
         </table>
       </div>
+      <div class="section-header" style="margin-top:22px;">
+        <div class="section-title">Best Sellers</div>
+      </div>
+      <div class="rank-list" id="report-rank-list"></div>
     </div>
 
     <!-- ===================== BEST SELLERS ===================== -->
@@ -1027,8 +1063,7 @@ input:focus, select:focus, textarea:focus {
         </div>
         <div class="form-group">
           <label>Category *</label>
-          <input type="text" id="form-category" placeholder="e.g. Drinks" list="cat-list">
-          <datalist id="cat-list"></datalist>
+          <select id="form-category"></select>
         </div>
       </div>
       <div class="form-row">
@@ -1045,6 +1080,67 @@ input:focus, select:focus, textarea:focus {
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('modal-product')">Cancel</button>
       <button class="btn btn-primary" onclick="saveProduct()"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-category">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Categories</div>
+      <button class="modal-close" onclick="closeModal('modal-category')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Add Category</label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="new-category-name" placeholder="e.g. Snacks">
+          <button class="btn btn-primary" onclick="addCategory()"><i class="fa-solid fa-plus"></i> Add</button>
+        </div>
+      </div>
+      <div class="category-list" id="category-list"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-category')">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-category-edit">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Edit Category</div>
+      <button class="modal-close" onclick="closeModal('modal-category-edit')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-category-original">
+      <div class="form-group">
+        <label>Category Name</label>
+        <input type="text" id="edit-category-name" placeholder="Category name">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-category-edit')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCategoryEdit()"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-category-delete">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Delete Category</div>
+      <button class="modal-close" onclick="closeModal('modal-category-delete')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="delete-category-name-value">
+      <p style="font-size:0.87rem;color:var(--text2);line-height:1.6;">
+        Delete <strong id="delete-category-name"></strong>? Products in this category will move to <strong>Uncategorized</strong>.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-category-delete')">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDeleteCategory()"><i class="fa-solid fa-trash"></i> Delete</button>
     </div>
   </div>
 </div>
@@ -1091,8 +1187,10 @@ const DEFAULT_PRODUCTS = [
   { id:11, name:"Bear Brand 300g",   category:"Dairy",      stock:12, price:110 },
   { id:12, name:"Marlboro Red",      category:"Tobacco",    stock:2,  price:5   },
 ];
+const DEFAULT_CATEGORIES = [...new Set(DEFAULT_PRODUCTS.map(p=>p.category))].sort();
 
 let products = DEFAULT_PRODUCTS.map(p => ({...p}));
+let categories = [...DEFAULT_CATEGORIES];
 let sales = [];
 
 let nextProductId = 13;
@@ -1122,12 +1220,21 @@ function salesTotal(s) { return s.reduce((t,x)=>t+x.total,0); }
 function salesForDate(d) { return sales.filter(s=>s.date===d); }
 function salesForWeek() { const {start,end}=getWeekRange(); return sales.filter(s=>s.date>=start&&s.date<=end); }
 function salesForMonth() { return sales.filter(s=>s.date.startsWith(getMonth())); }
-function bestSellers() {
+function bestSellers(sourceSales=sales) {
   const t={};
-  sales.forEach(s=>{ t[s.productId]=(t[s.productId]||0)+s.quantity; });
+  sourceSales.forEach(s=>{ t[s.productId]=(t[s.productId]||0)+s.quantity; });
   return Object.entries(t).map(([id,qty])=>({id:+id,qty})).sort((a,b)=>b.qty-a.qty);
 }
 function nextIdFor(rows) { return rows.reduce((max,row)=>Math.max(max, Number(row.id)||0),0)+1; }
+function uniqueSorted(values) {
+  return [...new Set(values.map(v=>String(v||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+}
+function syncCategoriesFromProducts() {
+  categories = uniqueSorted([...categories, ...products.map(p=>p.category)]);
+}
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
 function formatSavedAt(value) {
   if(!value) return 'never';
   return new Date(value).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
@@ -1140,6 +1247,7 @@ function getBackupMeta() {
 function buildSnapshot() {
   return {
     products,
+    categories,
     sales,
     order,
     nextProductId,
@@ -1153,6 +1261,8 @@ function loadLocalData() {
   try {
     const state = JSON.parse(raw);
     if(Array.isArray(state.products)) products = state.products;
+    categories = Array.isArray(state.categories) ? uniqueSorted(state.categories) : uniqueSorted(products.map(p=>p.category));
+    syncCategoriesFromProducts();
     if(Array.isArray(state.sales)) sales = state.sales;
     if(Array.isArray(state.order)) order = state.order;
     nextProductId = Number(state.nextProductId) || nextIdFor(products);
@@ -1357,13 +1467,14 @@ function renderDashboard() {
 ============================================================ */
 function renderInventory() {
   const q   = (document.getElementById('inv-search').value||'').toLowerCase();
-  const cat = document.getElementById('inv-cat-filter').value;
-  const cats = [...new Set(products.map(p=>p.category))].sort();
+  syncCategoriesFromProducts();
+  const cats = categories;
   const cf = document.getElementById('inv-cat-filter');
   const sv = cf.value;
-  cf.innerHTML = '<option value="">All Categories</option>'+cats.map(c=>`<option value="${c}" ${c===sv?'selected':''}>${c}</option>`).join('');
-  document.getElementById('cat-list').innerHTML = cats.map(c=>`<option value="${c}">`).join('');
-  const filtered = products.filter(p=>(!q||p.name.toLowerCase().includes(q)||p.category.toLowerCase().includes(q))&&(!cat||p.category===cat));
+  const selectedCat = cats.includes(sv) ? sv : '';
+  cf.innerHTML = '<option value="">All Categories</option>'+cats.map(c=>`<option value="${escapeHtml(c)}" ${c===selectedCat?'selected':''}>${escapeHtml(c)}</option>`).join('');
+  renderProductCategoryOptions();
+  const filtered = products.filter(p=>(!q||p.name.toLowerCase().includes(q)||p.category.toLowerCase().includes(q))&&(!selectedCat||p.category===selectedCat));
   document.getElementById('inv-count').textContent = `(${filtered.length} of ${products.length})`;
   document.getElementById('inv-table').innerHTML = filtered.length ? filtered.map((p,i)=>`
     <tr>
@@ -1382,13 +1493,21 @@ function renderInventory() {
   `).join('') : `<tr><td colspan="6" class="text-center text-muted" style="padding:32px">No products found</td></tr>`;
 }
 
+function renderProductCategoryOptions(selected='') {
+  const select = document.getElementById('form-category');
+  if(!select) return;
+  syncCategoriesFromProducts();
+  select.innerHTML = categories.map(c=>`<option value="${escapeHtml(c)}" ${c===selected?'selected':''}>${escapeHtml(c)}</option>`).join('');
+}
+
 /* ============================================================
    PRODUCT MODAL
 ============================================================ */
 function openAddProduct() {
   document.getElementById('modal-product-title').textContent = 'Add Product';
   document.getElementById('edit-product-id').value = '';
-  ['form-name','form-category','form-stock','form-price'].forEach(id=>document.getElementById(id).value='');
+  ['form-name','form-stock','form-price'].forEach(id=>document.getElementById(id).value='');
+  renderProductCategoryOptions(categories[0]||'');
   openModal('modal-product');
 }
 function openEditProduct(id) {
@@ -1396,7 +1515,7 @@ function openEditProduct(id) {
   document.getElementById('modal-product-title').textContent = 'Edit Product';
   document.getElementById('edit-product-id').value = p.id;
   document.getElementById('form-name').value     = p.name;
-  document.getElementById('form-category').value = p.category;
+  renderProductCategoryOptions(p.category);
   document.getElementById('form-stock').value    = p.stock;
   document.getElementById('form-price').value    = p.price;
   openModal('modal-product');
@@ -1408,12 +1527,103 @@ function saveProduct() {
   const stock = parseInt(document.getElementById('form-stock').value);
   const price = parseFloat(document.getElementById('form-price').value);
   if(!name||!cat||isNaN(stock)||isNaN(price)||stock<0||price<0){ showToast('Please fill all fields correctly.','error'); return; }
+  if(!categories.includes(cat)) categories.push(cat);
+  categories = uniqueSorted(categories);
   if(id){ const p=products.find(p=>p.id===+id); if(p){p.name=name;p.category=cat;p.stock=stock;p.price=price;} showToast('Product updated!','success'); }
   else  { products.push({id:nextProductId++,name,category:cat,stock,price}); showToast('Product added!','success'); }
   saveLocalData();
   closeModal('modal-product');
   renderInventory();
   if(currentPage==='dashboard') renderDashboard();
+}
+
+/* ============================================================
+   CATEGORY MODALS
+============================================================ */
+function categoryExists(name, except='') {
+  const n = name.toLowerCase();
+  const e = except.toLowerCase();
+  return categories.some(c=>c.toLowerCase()===n && c.toLowerCase()!==e);
+}
+function openCategoryModal() {
+  renderCategoryList();
+  openModal('modal-category');
+}
+function renderCategoryList() {
+  syncCategoriesFromProducts();
+  const list = document.getElementById('category-list');
+  list.innerHTML = categories.length ? categories.map(c=>{
+    const count = products.filter(p=>p.category===c).length;
+    return `
+      <div class="category-row">
+        <div>
+          <div class="category-name">${escapeHtml(c)}</div>
+          <div class="category-count">${count} product${count===1?'':'s'}</div>
+        </div>
+        <div class="category-actions">
+          <button class="btn btn-sm btn-secondary" data-cat="${escapeHtml(c)}" onclick="openEditCategory(this.dataset.cat)"><i class="fa-solid fa-pen"></i> Edit</button>
+          <button class="btn btn-sm btn-danger" data-cat="${escapeHtml(c)}" onclick="openDeleteCategory(this.dataset.cat)"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      </div>
+    `;
+  }).join('') : `<div class="text-center text-muted" style="padding:20px">No categories yet</div>`;
+  renderProductCategoryOptions();
+}
+function addCategory() {
+  const input = document.getElementById('new-category-name');
+  const name = input.value.trim();
+  if(!name){ showToast('Category name is required.','error'); return; }
+  if(categoryExists(name)){ showToast('Category already exists.','error'); return; }
+  categories = uniqueSorted([...categories, name]);
+  input.value = '';
+  saveLocalData();
+  renderCategoryList();
+  renderInventory();
+  renderCatFilters();
+  showToast('Category added.','success');
+}
+function openEditCategory(category) {
+  document.getElementById('edit-category-original').value = category;
+  document.getElementById('edit-category-name').value = category;
+  openModal('modal-category-edit');
+}
+function saveCategoryEdit() {
+  const original = document.getElementById('edit-category-original').value;
+  const name = document.getElementById('edit-category-name').value.trim();
+  if(!name){ showToast('Category name is required.','error'); return; }
+  if(categoryExists(name, original)){ showToast('Category already exists.','error'); return; }
+  products.forEach(p=>{ if(p.category===original) p.category = name; });
+  categories = uniqueSorted(categories.map(c=>c===original?name:c));
+  if(activeCatFilter===original) activeCatFilter = name;
+  saveLocalData();
+  closeModal('modal-category-edit');
+  renderCategoryList();
+  renderInventory();
+  renderCatFilters();
+  renderProductGrid();
+  showToast('Category updated.','success');
+}
+function openDeleteCategory(category) {
+  document.getElementById('delete-category-name-value').value = category;
+  document.getElementById('delete-category-name').textContent = category;
+  openModal('modal-category-delete');
+}
+function confirmDeleteCategory() {
+  const category = document.getElementById('delete-category-name-value').value;
+  if(category==='Uncategorized'){ showToast('Uncategorized cannot be deleted.','error'); return; }
+  const used = products.some(p=>p.category===category);
+  categories = categories.filter(c=>c!==category);
+  if(used && !categories.includes('Uncategorized')) categories.push('Uncategorized');
+  products.forEach(p=>{ if(p.category===category) p.category = 'Uncategorized'; });
+  categories = uniqueSorted(categories);
+  if(activeCatFilter===category) activeCatFilter = 'All';
+  saveLocalData();
+  closeModal('modal-category-delete');
+  renderCategoryList();
+  renderInventory();
+  renderCatFilters();
+  renderProductGrid();
+  showToast('Category deleted.','success');
 }
 
 /* ============================================================
@@ -1438,10 +1648,11 @@ function confirmDelete() {
    POS — CATEGORY FILTERS
 ============================================================ */
 function renderCatFilters() {
-  const cats = ['All', ...[...new Set(products.map(p=>p.category))].sort()];
+  syncCategoriesFromProducts();
+  const cats = ['All', ...categories];
   document.getElementById('cat-filter-row').innerHTML = cats.map(c=>`
-    <button class="cat-btn ${c===activeCatFilter?'active':''}" onclick="setCatFilter('${c}')">
-      ${c==='All'?'<i class="fa-solid fa-th-large"></i> ':''}${c}
+    <button class="cat-btn ${c===activeCatFilter?'active':''}" data-cat="${escapeHtml(c)}" onclick="setCatFilter(this.dataset.cat)">
+      ${c==='All'?'<i class="fa-solid fa-th-large"></i> ':''}${escapeHtml(c)}
     </button>
   `).join('');
 }
@@ -1614,17 +1825,20 @@ function renderReport(type) {
       <td class="fw-bold color-accent">${fmt(s.total)}</td>
     </tr>
   `).join('') : `<tr><td colspan="4" class="text-center text-muted" style="padding:32px">No sales recorded</td></tr>`;
+  renderBestSellers('report-rank-list', fs);
 }
 
 /* ============================================================
    BEST SELLERS
 ============================================================ */
-function renderBestSellers() {
-  const bs = bestSellers();
+function renderBestSellers(targetId='rank-list', sourceSales=sales) {
+  const bs = bestSellers(sourceSales);
   const medals = ['#1','#2','#3'];
-  document.getElementById('rank-list').innerHTML = bs.length ? bs.map((item,i)=>{
+  const target = document.getElementById(targetId);
+  if(!target) return;
+  target.innerHTML = bs.length ? bs.map((item,i)=>{
     const p = products.find(pr=>pr.id===item.id);
-    const rev = sales.filter(s=>s.productId===item.id).reduce((s,x)=>s+x.total,0);
+    const rev = sourceSales.filter(s=>s.productId===item.id).reduce((s,x)=>s+x.total,0);
     return `
     <div class="rank-item">
       <div class="rank-num">${i<3?medals[i]:'#'+(i+1)}</div>
